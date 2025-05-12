@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Camera Feed</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.05); }
+        .hero-bg { background: linear-gradient(135deg, #6B7280, #3B82F6); }
+        body {
+            background-image: url('{{ url_for("static", filename="background.jpg") }}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7); /* Light overlay for brighter effect */
+            z-index: -1;
+        }
+        main, footer { position: relative; z-index: 1; }
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+            flex-direction: column;
+            text-align: center;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #camera_feed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <header class="hero-bg text-white py-16">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Live Camera Feed</h1>
+            <p class="text-lg md:text-xl opacity-90">Real-time object detection and depth analysis</p>
+        </div>
+    </header>
+    <main class="container mx-auto py-12 px-4">
+        <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+            <div class="video-container mb-6">
+                <img id="camera_feed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+            </div>
+            <div class="bg-gray-100 p-4 mb-6 rounded-lg">
+                <h4 class="text-lg font-medium text-gray-700 mb-2">Feedback</h4>
+                <div class="flex items-center mb-2">
+                    <p id="feedbackMessage" class="flex-1"><strong>Detection Feedback:</strong> <span id="feedback_message">Waiting for detection...</span></p>
+                    <button id="repeatTTS" class="bg-blue-600 text-white font-medium py-1 px-3 rounded-lg hover:bg-blue-700 hover-scale ml-4" aria-label="Repeat TTS feedback">
+                        Repeat TTS
+                    </button>
+                </div>
+                <p><span id="status_indicator" class="status-indicator status-inactive"></span><strong>Status:</strong> <span id="status_message">Connecting to camera...</span></p>
+                <p><strong>Distance:</strong> <span id="distance_message">-</span></p>
+            </div>
+            <div class="flex items-center mb-4">
+                <input type="checkbox" id="ttsToggle" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="ttsToggle" class="ml-2 block text-sm font-medium text-gray-700">Toggle TTS On/Off</label>
+            </div>
+            <div class="flex space-x-4">
+                <a href="{{ url_for('index') }}" class="bg-gray-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-700 hover-scale">Back to Menu</a>
+                <button id="refresh_btn" class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 hover-scale">Refresh Connection</button>
+            </div>
+        </div>
+    </main>
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto">
+            <p>© 2025 Smart Blind Assistance System. All rights reserved.</p>
+            <p>Developed by: Tabidah Usmani, Ziyan Murtaza, Amna Javaid, Tasmiya Asad</p>
+        </div>
+    </footer>
+    <script>
+        // Initialize TTS toggle from localStorage
+        const ttsToggle = document.getElementById('ttsToggle');
+        ttsToggle.checked = localStorage.getItem('ttsEnabled') === 'true';
+        
+        // Save TTS state to localStorage on change
+        ttsToggle.addEventListener('change', function() {
+            localStorage.setItem('ttsEnabled', ttsToggle.checked);
+            if (ttsToggle.checked && document.getElementById('feedbackMessage')) {
+                speak(document.getElementById('feedbackMessage').textContent);
+            }
+        });
+
+        // Speak function using Web Speech API
+        function speak(text) {
+            if (ttsToggle.checked && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Repeat TTS button handler
+        const repeatTTSButton = document.getElementById('repeatTTS');
+        if (repeatTTSButton) {
+            repeatTTSButton.addEventListener('click', function() {
+                const feedbackMessage = document.getElementById('feedbackMessage');
+                if (feedbackMessage && ttsToggle.checked) {
+                    speak(feedbackMessage.textContent);
+                }
+            });
+        }
+
+        // Status polling
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status_message').innerText = data.camera_status;
+                    document.getElementById('feedback_message').innerText = data.detection_feedback;
+                    document.getElementById('distance_message').innerText = data.distance;
+
+                    const statusIndicator = document.getElementById('status_indicator');
+                    if (data.camera_status.toLowerCase() === 'connected') {
+                        statusIndicator.classList.remove('status-inactive');
+                        statusIndicator.classList.add('status-active');
+                    } else {
+                        statusIndicator.classList.remove('status-active');
+                        statusIndicator.classList.add('status-inactive');
+                    }
+
+                    // Trigger TTS for new feedback if enabled
+                    if (ttsToggle.checked && document.getElementById('feedbackMessage')) {
+                        const feedbackText = document.getElementById('feedbackMessage').textContent;
+                        if (feedbackText !== 'Detection Feedback: Waiting for detection...') {
+                            speak(feedbackText);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching status:", error);
+                    document.getElementById('status_message').innerText = 'Error fetching status';
+                    document.getElementById('status_indicator').classList.remove('status-active');
+                    document.getElementById('status_indicator').classList.add('status-inactive');
+                });
+        }
+
+        // Start polling every 1 second
+        setInterval(updateStatus, 1000);
+
+        // Refresh button handler
+        const refreshBtn = document.getElementById('refresh_btn');
+        refreshBtn.addEventListener('click', function() {
+            document.getElementById('camera_feed').src = "{{ url_for('video_feed') }}?" + new Date().getTime();
+            updateStatus();
+        });
+
+        // Commented-out EventSource code (preserved)
+        /*
+        const cameraFeed = document.getElementById('camera_feed');
+        const statusIndicator = document.getElementById('status_indicator');
+        const statusMessage = document.getElementById('status_message');
+        const feedbackMessage = document.getElementById('feedback_message');
+        const distanceMessage = document.getElementById('distance_message');
+        const refreshBtn = document.getElementById('refresh_btn');
+        
+        let retryCount = 0;
+        const maxRetries = 5;
+        const retryDelay = 2000; // 2 seconds
+        
+        function connectToFeed() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            statusIndicator.className = 'status-indicator status-inactive';
+            statusMessage.textContent = 'Connecting to camera...';
+            feedbackMessage.textContent = 'Waiting for detection...';
+            distanceMessage.textContent = '-';
+            
+            eventSource = new EventSource('/video_feed');
+            
+            eventSource.onopen = function() {
+                retryCount = 0;
+                statusIndicator.className = 'status-indicator status-active';
+                statusMessage.textContent = 'Connected to camera feed';
+                console.log('EventSource connection opened');
+            };
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const [frameData, message, distance] = event.data.split('|');
+                    
+                    if (frameData && frameData.startsWith('data:image/jpeg;base64,')) {
+                        cameraFeed.src = frameData;
+                    }
+                    
+                    feedbackMessage.textContent = message || 'Processing...';
+                    distanceMessage.textContent = distance ? `${distance} meters` : '-';
+                    
+                } catch (e) {
+                    console.error('Error parsing EventSource data:', e);
+                    feedbackMessage.textContent = 'Error: Failed to update feed.';
+                }
+            };
+            
+            eventSource.onerror = function() {
+                statusIndicator.className = 'status-indicator status-inactive';
+                
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    statusMessage.textContent = `Connection lost. Retrying (${retryCount}/${maxRetries})...`;
+                    console.error(`EventSource connection error. Retrying (${retryCount}/${maxRetries})`);
+                    setTimeout(connectToFeed, retryDelay);
+                } else {
+                    statusMessage.textContent = 'Error: Failed to connect to camera feed';
+                    feedbackMessage.textContent = 'Please check if the camera is available and refresh the page.';
+                    console.error('EventSource connection failed after retries');
+                }
+            };
+        }
+        
+        connectToFeed();
+        
+        refreshBtn.addEventListener('click', function() {
+            connectToFeed();
+        });
+        
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+        */
+    </script>
+</body>
+</html>
