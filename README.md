@@ -18,13 +18,29 @@ Alert System: Sends feedback about the detected obstacles' position (left, right
 
 Error Handling: Alerts users about issues such as missing files or camera connection problems.
 
+# Project Structure
+
+   ├── app.py # Main Flask backend
+   
+   ├── templates/ (index.html, live_feed.html, coco_dataset.html)
+   
+   ├── uploads/ # COCO dataset
+
+   https://www.kaggle.com/datasets/awsaf49/coco-2017-dataset
+   
+   ├── sounds/ # Pre-generated alert tone WAV files
+   
+   └── static/ # Optional for CSS/JS assets
+
 # **Installation**
 1. Clone the Repository
+   
    https://github.com/tabidah-usmani/Smart-Blind-Assistance-System.git
    
    cd Smart-Blind-Assistance-System
    
 3. Install Dependencies
+   
     Flask: For web server and routing.
 
     OpenCV: For video capture and image processing.
@@ -34,3 +50,25 @@ Error Handling: Alerts users about issues such as missing files or camera connec
     pygame: For sound alerts.
     
     pyttsx3: For text-to-speech feedback (optional).
+
+5. Usage
+   
+   * Start the application
+   `   python app.py
+   `
+
+     Visit http://127.0.0.1:5000/ in your browser to access the main interface.
+
+   * Live Feed
+   
+      Navigate to /live_feed to see the live camera feed with object detection and depth estimation.
+
+   * Upload Images for Processing
+
+      Navigate to /coco_dataset to upload an image file (PNG, JPG, or JPEG).
+
+
+   
+
+
+   
