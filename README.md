@@ -30,7 +30,7 @@ Error Handling: Alerts users about issues such as missing files or camera connec
    
    ├── sounds/ # Pre-generated alert tone WAV files
    
-   └── static/ # Optional for CSS/JS assets
+   └── static/ # background.jpg
 
 # **Installation**
 1. Clone the Repository
