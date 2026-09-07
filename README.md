@@ -2,7 +2,7 @@
 
 ### 👁️‍🗨️ Real-Time Object Detection & Depth Estimation for the Visually Impaired
 
-A web-based assistive technology application that helps visually impaired users navigate their surroundings safely. By combining **real-time object detection** 🎯 and **monocular depth estimation** 📏, the system identifies obstacles in a live camera feed, estimates how far away they are, and delivers instant **audio and visual alerts** 🔊 to guide the user around hazards — all through a lightweight, browser-accessible interface.
+A web-based assistive technology application that helps visually impaired users navigate their surroundings safely. By combining **real-time object detection** 🎯 and **monocular depth estimation** 📏, the system identifies obstacles in a live camera feed, estimates how far away they are, and delivers instant **audio and visual alerts** 🔊 to guide the user around hazards, all through a lightweight, browser-accessible interface.
 
 ---
 
@@ -47,17 +47,17 @@ The goal is to give users an extra "sense" of their surroundings — turning raw
 
 ## ✨ Features
 
-- 🎯 **Real-Time Object Detection** — Powered by YOLOv5, the system detects and draws bounding boxes around obstacles, people, furniture, vehicles, and other objects in the live camera feed, labeling each with its class name and confidence score.
-- 📏 **Depth Estimation** — MiDaS estimates a relative depth map for every frame, allowing the system to approximate how close or far each detected object is — critical for prioritizing which obstacles matter most right now.
-- 🔊 **Auditory Feedback** — Distinct alert tones (played via `pygame`) warn the user when an obstacle is within a risky distance, with optional **Text-to-Speech** narration via `pyttsx3` (e.g., *"Obstacle ahead, chair, 1.5 meters"*).
-- 🧭 **Directional Awareness** — Feedback isn't just "something's there" — it tells the user whether the obstacle is on their **left**, **right**, or **directly ahead**, so they know which way to adjust.
-- 🌐 **Web Interface** — Built entirely with Flask, so there's no app to install — just open a browser and go. Includes:
+- 🎯 **Real-Time Object Detection**: Powered by YOLOv5, the system detects and draws bounding boxes around obstacles, people, furniture, vehicles, and other objects in the live camera feed, labeling each with its class name and confidence score.
+- 📏 **Depth Estimation**: MiDaS estimates a relative depth map for every frame, allowing the system to approximate how close or far each detected object is — critical for prioritizing which obstacles matter most right now.
+- 🔊 **Auditory Feedback**: Distinct alert tones (played via `pygame`) warn the user when an obstacle is within a risky distance, with optional **Text-to-Speech** narration via `pyttsx3` (e.g., *"Obstacle ahead, chair, 1.5 meters"*).
+- 🧭 **Directional Awareness**: Feedback isn't just "something's there" — it tells the user whether the obstacle is on their **left**, **right**, or **directly ahead**, so they know which way to adjust.
+- 🌐 **Web Interface**: Built entirely with Flask, so there's no app to install — just open a browser and go. Includes:
   - A **home page** with an overview/entry point
   - A **live feed page** streaming annotated video in real time
   - An **image upload page** for testing detection/depth estimation on static images (e.g., from the COCO dataset)
-- 🚨 **Proximity-Based Alert System** — Alerts scale with urgency: the closer the obstacle, the more insistent the feedback, helping users react appropriately to imminent vs. distant hazards.
-- 🛡️ **Robust Error Handling** — Friendly alerts for common failure points: missing model files, camera not detected/connected, unsupported image formats, and more, so the app fails gracefully instead of silently breaking.
-- 🖼️ **Static Image Testing Mode** — Beyond live video, users (or developers) can upload PNG/JPG/JPEG images to see how the detection + depth pipeline performs on demand, which is also great for demoing and debugging.
+- 🚨 **Proximity-Based Alert System**: Alerts scale with urgency: the closer the obstacle, the more insistent the feedback, helping users react appropriately to imminent vs. distant hazards.
+- 🛡️ **Robust Error Handling**: Friendly alerts for common failure points: missing model files, camera not detected/connected, unsupported image formats, and more, so the app fails gracefully instead of silently breaking.
+- 🖼️ **Static Image Testing Mode**: Beyond live video, users (or developers) can upload PNG/JPG/JPEG images to see how the detection + depth pipeline performs on demand, which is also great for demoing and debugging.
 
 ---
 
@@ -65,12 +65,12 @@ The goal is to give users an extra "sense" of their surroundings — turning raw
 
 At a high level, each video frame (or uploaded image) flows through two parallel deep learning models before being combined into a single, human-friendly alert:
 
-1. **YOLOv5 (You Only Look Once, v5)** 🎯 — a fast, single-pass convolutional neural network that detects and localizes multiple objects in an image simultaneously, returning bounding boxes, class labels, and confidence scores.
-2. **MiDaS (Mixed Dataset Training for Monocular Depth Estimation)** 📏 — a model that predicts a dense relative depth map from a *single* 2D image (no stereo camera or LiDAR needed), estimating which pixels are near and which are far.
+1. **YOLOv5 (You Only Look Once, v5)** 🎯: a fast, single-pass convolutional neural network that detects and localizes multiple objects in an image simultaneously, returning bounding boxes, class labels, and confidence scores.
+2. **MiDaS (Mixed Dataset Training for Monocular Depth Estimation)** 📏: a model that predicts a dense relative depth map from a *single* 2D image (no stereo camera or LiDAR needed), estimating which pixels are near and which are far.
 
 The system then **fuses** these two outputs: for every bounding box YOLOv5 finds, it samples the corresponding region of the MiDaS depth map to estimate that object's distance from the camera. Combined with the object's horizontal position in the frame, this produces a compact piece of guidance like:
 
-> 🔊 *"Person ahead, 2 meters — move right"*
+> 🔊 *"Person ahead, 2 meters, move right"*
 
 This fused signal is what gets converted into sound alerts and/or speech.
 
@@ -130,7 +130,7 @@ This fused signal is what gets converted into sound alerts and/or speech.
 ```
 Smart-Blind-Assistance-System/
 │
-├── app.py                     # 🧠 Main Flask backend — routes, model loading, detection & depth logic
+├── app.py                     # 🧠 Main Flask backend: routes, model loading, detection & depth logic
 │
 ├── templates/                 # 🖼️ HTML templates rendered by Flask
 │   ├── index.html              #     🏠 Home page / entry point
@@ -191,7 +191,7 @@ pip install flask opencv-python torch torchvision pygame pyttsx3
 
 ### 4️⃣ Download Model Weights
 
-YOLOv5 and MiDaS weights are typically fetched automatically via `torch.hub` on first run — make sure you have an internet connection the first time you launch the app so the models can download. 🌐⬇️
+YOLOv5 and MiDaS weights are typically fetched automatically via `torch.hub` on first run, make sure you have an internet connection the first time you launch the app so the models can download. 🌐⬇️
 
 ### 5️⃣ Prepare the Dataset (optional, for image upload testing)
 
@@ -233,7 +233,7 @@ Navigate to:
 http://127.0.0.1:5000/coco_dataset
 ```
 
-Here you can upload a static image (`.png`, `.jpg`, or `.jpeg`) and see the detection + depth estimation pipeline run on it — great for testing, demos, or exploring how the system performs on the COCO dataset. 🖼️🔍
+Here you can upload a static image (`.png`, `.jpg`, or `.jpeg`) and see the detection + depth estimation pipeline run on it, great for testing, demos, or exploring how the system performs on the COCO dataset. 🖼️🔍
 
 ---
 
@@ -260,7 +260,7 @@ The alert system is designed to be **simple, fast, and unambiguous** — critica
 
 ## 📦 Dataset
 
-This project uses the **[COCO 2017 Dataset](https://www.kaggle.com/datasets/awsaf49/coco-2017-dataset)** 📦 — a large-scale, richly annotated object detection dataset — for testing the image upload and detection pipeline. COCO's broad category coverage (people, furniture, vehicles, animals, everyday objects, etc.) makes it a strong benchmark for validating detection quality in the kinds of scenes a visually impaired user might actually encounter. 🏙️🛋️🚗
+This project uses the **[COCO 2017 Dataset](https://www.kaggle.com/datasets/awsaf49/coco-2017-dataset)** 📦, a large-scale, richly annotated object detection dataset — for testing the image upload and detection pipeline. COCO's broad category coverage (people, furniture, vehicles, animals, everyday objects, etc.) makes it a strong benchmark for validating detection quality in the kinds of scenes a visually impaired user might actually encounter. 🏙️🛋️🚗
 
 ---
 
